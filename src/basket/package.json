@@ -1,0 +1,9 @@
+{
+  "name": "@src/basket",
+  "version": "1.0.0",
+  "main": "index",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.137.0",
+    "@aws-sdk/util-dynamodb": "^3.137.0"
+  }
+}
