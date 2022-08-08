@@ -40,7 +40,7 @@ exports.handler = async function (event) {
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: `Successfully finished operation: "${event.httpMethod}"`,
         body,
