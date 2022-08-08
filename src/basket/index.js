@@ -2,7 +2,9 @@ import {
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
+  DeleteItemCommand,
 } from '@aws-sdk/client-dynamodb';
+import { PutEventsCommand } from '@aws-sdk/client-eventbridge';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { ddbClient } from './ddbClient';
 import { ebClient } from './eventBridgeClient';
@@ -36,7 +38,7 @@ exports.handler = async function (event) {
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: `Successfully finished operation: "${event.httpMethod}"`,
         body,
@@ -69,7 +71,7 @@ const getBasket = async (username) => {
     console.log(Item);
 
     return Item ? unmarshall(Item) : {};
-  } catch (error) {
+  } catch (e) {
     console.log(e);
     throw e;
   }
@@ -178,6 +180,7 @@ const prepareOrderPayload = (checkoutRequest, basket) => {
     // copies all properties from basket into checkoutRequest
     Object.assign(checkoutRequest, basket);
     console.log('Success prepreOrderPayload, orderPayload:', checkoutRequest);
+    return checkoutRequest;
   } catch (error) {
     console.log(error);
     throw error;
