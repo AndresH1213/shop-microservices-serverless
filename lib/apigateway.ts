@@ -5,6 +5,7 @@ import { Construct } from 'constructs';
 interface SwnApiGatewayProps {
   productFunction: IFunction;
   basketFunction: IFunction;
+  orderingFunction: IFunction;
 }
 
 export class SwnApiGateway extends Construct {
@@ -12,6 +13,7 @@ export class SwnApiGateway extends Construct {
     super(scope, id);
     this.createProductApi(props.productFunction);
     this.createBasketApi(props.basketFunction);
+    this.createOrderingApi(props.orderingFunction);
   }
   createProductApi(productFn: IFunction) {
     const apigw = new LambdaRestApi(this, 'productApi', {
@@ -45,12 +47,29 @@ export class SwnApiGateway extends Construct {
     basket.addMethod('POST');
 
     // path: /basket/{userName}
-    const singleBasket = basket.addResource('{id}');
+    const singleBasket = basket.addResource('{username}');
     singleBasket.addMethod('GET');
     singleBasket.addMethod('DELETE');
 
     // path: /basket/checkout
     const basketCheckout = basket.addResource('checkout');
     basketCheckout.addMethod('POST');
+  }
+
+  createOrderingApi(orderingFn: IFunction) {
+    const apigw = new LambdaRestApi(this, 'orderingApi', {
+      restApiName: 'OrderingServiceApi',
+      handler: orderingFn,
+      proxy: false,
+    });
+
+    const order = apigw.root.addResource('order');
+    // path: /order
+    order.addMethod('GET');
+    // path: order/{username}?orderDate=timestamp
+    const singleOrder = order.addResource('{userName}');
+    singleOrder.addMethod('GET');
+
+    return singleOrder;
   }
 }
