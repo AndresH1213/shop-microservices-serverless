@@ -10,36 +10,44 @@ import { join } from 'path';
 interface SwnMicroservicesProps {
   productTable: ITable;
   basketTable: ITable;
+  orderTable: ITable;
 }
 
 export class SwnMicroservices extends Construct {
   public readonly productFunction: NodejsFunction;
   public readonly basketFunction: NodejsFunction;
+  public readonly orderingFunction: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: SwnMicroservicesProps) {
     super(scope, id);
 
     this.productFunction = this.createFunction('product', {
-      name: props.productTable.tableName,
-      pk: 'id',
+      DYNAMODB_TABLE_NAME: props.productTable.tableName,
+      PRIMARY_KEY: 'id',
     });
     props.productTable.grantReadWriteData(this.productFunction);
     this.basketFunction = this.createFunction('basket', {
-      name: props.basketTable.tableName,
-      pk: 'userName',
+      DYNAMODB_TABLE_NAME: props.basketTable.tableName,
+      PRIMARY_KEY: 'userName',
+      EVENT_SOURCE: 'com.swn.basket.checkoutbasket',
+      EVENT_DETAILTYPE: 'CheckoutBasket',
+      EVENT_BUSNAME: 'SwnEventBus',
     });
-    props.productTable.grantReadWriteData(this.productFunction);
+    props.basketTable.grantReadWriteData(this.basketFunction);
+    this.orderingFunction = this.createFunction('ordering', {
+      DYNAMODB_TABLE_NAME: props.orderTable.tableName,
+      PRIMARY_KEY: 'userName',
+      SORT_KEY: 'orderDate',
+    });
+    props.orderTable.grantReadWriteData(this.orderingFunction);
   }
 
-  createFunction(name: string, table: { name: string; pk: string }) {
+  createFunction(name: string, environmentVariables: any) {
     const nodeJsFunctionProps: NodejsFunctionProps = {
       bundling: {
         externalModules: ['aws-sdk'],
       },
-      environment: {
-        PRIMARY_KEY: table.pk,
-        DYNAMODB_TABLE_NAME: table.name,
-      },
+      environment: environmentVariables,
       runtime: Runtime.NODEJS_16_X,
     };
 
